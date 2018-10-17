@@ -13,7 +13,7 @@ namespace SMSModule
     interface ISMSClient
     {
      Task<MessageResource> SendMessage(string from, string to, string body);
-     string CreateAccount(string ClinicID);
+    AccountResource CreateAccount(string ClinicID);
      string AssignPhoneNumber(string AccountSid, string PathSid);
     }
 }
