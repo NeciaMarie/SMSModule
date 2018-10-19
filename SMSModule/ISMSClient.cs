@@ -12,8 +12,9 @@ namespace SMSModule
 {
     interface ISMSClient
     {
-     Task<MessageResource> SendMessage(string from, string to, string body);
-    AccountResource CreateAccount(string ClinicID);
-     string AssignPhoneNumber(string AccountSid, string PathSid);
+        Task<MessageResource> SendMessage(string from, string to, string body);
+        string CreateAccount(string clinicID);
+        AccountResource.StatusEnum UpdateAccount(string accountsid, string status);
+        //MessageResource FetchMessages(DateTime dateSent, string from, string to);
     }
 }

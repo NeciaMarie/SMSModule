@@ -12,7 +12,6 @@ namespace SMSModule
         public static string masterAuthToken = "a3576848d026286cd284ad19a5d02f87";
         public static string testAccountsid = "AC6bae9d6becaa813fb5c86e13b8fd9c55";
         public static string testAuthToken = "2e7d5fcae3b1f72b064c404abe607b1d";
-        public static string username = "t.blackwood@platinumsystem.com";
-        public static string password = "tblackwood1234";
+        public string subAccountSID { get; set; }
     }
 }

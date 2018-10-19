@@ -3,6 +3,7 @@ using Twilio.Clients;
 using Twilio.Rest.Api.V2010;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
+using Twilio.Exceptions;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -14,10 +15,17 @@ namespace SMSModule
     {
         public ITwilioRestClient _client;
 
+
         public SMSClient()
         {
-          _client = new TwilioRestClient(Credentials.username, Credentials.password);
-
+            try
+            {
+                _client = new TwilioRestClient(Credentials.masterAccountSid, Credentials.masterAuthToken);
+            }
+            catch (TwilioException ex)
+            {
+                throw ex;
+            }
         }
 
         public SMSClient(ITwilioRestClient client)
@@ -25,28 +33,46 @@ namespace SMSModule
             _client = client;
         }
 
-        public AccountResource CreateAccount(string clinicID)
+        public string CreateAccount(string clinicID)
         {
             var account = AccountResource.Create(friendlyName: clinicID, client: _client);
-            return account;
+            return account.Sid;
         }
 
-        public string AssignPhoneNumber(string pathaccountsid, string pathsid)
+        public AccountResource.StatusEnum UpdateAccount(string accountSid, string _status)
         {
-            var incomingphonenumber = IncomingPhoneNumberResource.Update(pathAccountSid: pathaccountsid, pathSid: pathsid, client: _client);
-            return incomingphonenumber.FriendlyName;
+            var account = AccountResource.Update(pathSid: accountSid, status: _status, client: _client);
+            return account.Status;
+
         }
 
+   
         public async Task<MessageResource> SendMessage(string from, string to, string body)
         {
-            var toPhoneNumber = new PhoneNumber(CleanPhoneNumber(FormatPhoneNumber(to)));
             var message = await MessageResource.CreateAsync(
-                toPhoneNumber,
-                from: new PhoneNumber(CleanPhoneNumber(FormatPhoneNumber(from))),
+                to:  new PhoneNumber(FormatPhoneNumber(to)),
+                from: new PhoneNumber(FormatPhoneNumber(from)),
                 body: body,
                 client: _client);
             return await Task.FromResult(message);
         }
+
+
+        //public MessageResource FetchMessages(long dateSent, string from, string to)
+        //{
+           
+        //    var messages = MessageResource.Read(
+        //       dateSent: new DateTime(dateSent),
+        //       from: new PhoneNumber(FormatPhoneNumber(from)),
+        //       to: new PhoneNumber (FormatPhoneNumber(to))
+        //       );
+
+        //    foreach (var record in messages)
+        //    {
+
+        //    }
+         
+        //}
 
         public static string FormatPhoneNumber(string unformattedNumber)
         {
@@ -62,19 +88,6 @@ namespace SMSModule
                 formattedNumber = String.Concat("1", formattedNumber);
 
             return String.Concat("+", formattedNumber);
-        }
-
-        private string CleanPhoneNumber(string phoneNumber)
-        {
-            string cleanedPhoneNumber = "";
-            char ch;
-            for (int i = 0; i < phoneNumber.Length; i++)
-            {
-                ch = phoneNumber[i];
-                if (char.IsDigit(ch))
-                    cleanedPhoneNumber = cleanedPhoneNumber + ch;
-            }
-            return cleanedPhoneNumber;
         }
 
     }
