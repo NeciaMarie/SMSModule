@@ -7,20 +7,23 @@ using Twilio.Exceptions;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace SMSModule
 {
-    public class SMSClient : ISMSClient
+    public class SMSClient : SMSResponse ,ISMSClient
 
     {
         public ITwilioRestClient _client;
+        public MessageResource messageResponse;
+       
+        public  SMSClient()
 
-
-        public SMSClient()
         {
             try
             {
                 _client = new TwilioRestClient(Credentials.masterAccountSid, Credentials.masterAuthToken);
+
             }
             catch (TwilioException ex)
             {
@@ -28,51 +31,114 @@ namespace SMSModule
             }
         }
 
-        public SMSClient(ITwilioRestClient client)
+      public  SMSClient(ITwilioRestClient client)
         {
             _client = client;
-        }
-
-        public string CreateAccount(string clinicID)
-        {
-            var account = AccountResource.Create(friendlyName: clinicID, client: _client);
-            return account.Sid;
-        }
-
-        public AccountResource.StatusEnum UpdateAccount(string accountSid, string _status)
-        {
-            var account = AccountResource.Update(pathSid: accountSid, status: _status, client: _client);
-            return account.Status;
-
-        }
-
-   
-        public async Task<MessageResource> SendMessage(string from, string to, string body)
-        {
-            var message = await MessageResource.CreateAsync(
-                to:  new PhoneNumber(FormatPhoneNumber(to)),
-                from: new PhoneNumber(FormatPhoneNumber(from)),
-                body: body,
-                client: _client);
-            return await Task.FromResult(message);
-        }
-
-
-        //public MessageResource FetchMessages(long dateSent, string from, string to)
-        //{
            
-        //    var messages = MessageResource.Read(
-        //       dateSent: new DateTime(dateSent),
-        //       from: new PhoneNumber(FormatPhoneNumber(from)),
-        //       to: new PhoneNumber (FormatPhoneNumber(to))
-        //       );
+        }
 
-        //    foreach (var record in messages)
-        //    {
+        public bool SendMessage(string from, string to, string body)
+        {
+            bool returnValue = true ;
+            try
+            {
+                var messageResponse =  MessageResource.Create(
+                   to: new PhoneNumber(FormatPhoneNumber(to)),
+                   from: new PhoneNumber(FormatPhoneNumber(from)),
+                   body: body,
+                   client: _client);
 
-        //    }
-         
-        //}
+                if  (messageResponse.Sid == "")
+                {
+                    returnValue = false;
+                }
+
+                return returnValue;
+            }
+            catch (ApiException ex)
+            {
+                throw ex;
+            }
+         }
+
+        //public async Task SendMessage(string from, string to, string body)
+        //  {
+        //    try
+        //      {
+        //       messageResponse = await MessageResource.CreateAsync(
+        //          to: new PhoneNumber(FormatPhoneNumber(to)),
+        //          from: new PhoneNumber(FormatPhoneNumber(from)),
+        //          body: body,
+        //          client: _client);
+
+        //      await Task.FromResult(true);
+        //      }
+        //      catch (ApiException ex)
+        //      {
+        //          throw ex;
+        //      }
+        //      finally
+        //      {
+        //          await Task.FromResult(true);
+        //      }
+
+        //  }
+
+        public string getResponseProperty(ResponsePropertyId iResponsePropertyId)
+        {
+            var responseString = "";
+
+            switch (iResponsePropertyId)
+            {
+                case ResponsePropertyId.MessageId:
+                    responseString = messageResponse.Sid;
+                    break;
+
+                case ResponsePropertyId.PhoneNumber:
+                    responseString = messageResponse.To;
+                    break;
+
+                case ResponsePropertyId.MessageText:
+                    responseString = messageResponse.Body;
+                    break;
+
+                case ResponsePropertyId.DeliveryStatus:
+                    responseString = messageResponse.Status.ToString();
+                    break;
+
+                case ResponsePropertyId.SendingStatus:
+                    responseString =messageResponse.Status.ToString(); ;
+                    break;
+
+                case ResponsePropertyId.SentDate:
+                    responseString = messageResponse.DateCreated.ToString();
+                    break;
+
+               case ResponsePropertyId.DeliveryDate:
+                    responseString = messageResponse.DateSent.ToString();
+                    break;
+
+               default:
+                    responseString = "";
+                    break;
+            }
+            return responseString;
+        }
+
+        public  string FetchMessages(long dateSent, string from, string to)
+        {
+            var messageHistory = MessageResource.Read(
+               dateSent: new DateTime(dateSent),
+               from: new PhoneNumber(FormatPhoneNumber(from)),
+               to: new PhoneNumber(FormatPhoneNumber(to))
+               );
+
+            foreach (var record in messageHistory)
+            {
+
+            }
+            return messageHistory.ToString();
+        }
 
         public static string FormatPhoneNumber(string unformattedNumber)
         {
@@ -89,6 +155,5 @@ namespace SMSModule
 
             return String.Concat("+", formattedNumber);
         }
-
     }
 }
