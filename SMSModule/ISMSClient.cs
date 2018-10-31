@@ -12,9 +12,9 @@ namespace SMSModule
 {
     interface ISMSClient
     {
-        bool SendMessage(string from, string to, string body);
-        string getResponseProperty(SMSResponse.ResponsePropertyId iResponsePropertyId);
-        string FetchMessages(long dateSent, string from, string to);
-        //Task SendMessage(string from, string to, string body)
+      string SendMessage(string from, string to, string body);
+      string[] getMessages(string from, string to);
+     // string getMessages(string from, string to);
+       
     }
 }

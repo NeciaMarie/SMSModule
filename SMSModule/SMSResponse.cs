@@ -17,19 +17,18 @@ namespace SMSModule
         public DateTime SentDate;
         public DateTime DeliveryDate;
         public string MessageId = "";
+    }
 
-        public enum ResponsePropertyId
-        {
-            MessageId = 1,
-            PhoneNumber,
-            MessageText,
-            SendingStatus,
-            DeliveryStatus,
-            SentDate,
-            DeliveryDate
-           
-        }
-           
+    public enum ResponsePropertyId
+    {
+        MessageId = 1,
+        PhoneNumber,
+        MessageText,
+        SendingStatus,
+        DeliveryStatus,
+        SentDate,
+        DeliveryDate
 
     }
+
 }

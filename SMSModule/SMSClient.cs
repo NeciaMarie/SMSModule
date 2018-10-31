@@ -7,17 +7,17 @@ using Twilio.Exceptions;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace SMSModule
 {
-    public class SMSClient : SMSResponse ,ISMSClient
+    public class SMSClient : ISMSClient
 
     {
         public ITwilioRestClient _client;
         public MessageResource messageResponse;
-       
-        public  SMSClient()
+        string[] messageList;
+
+        public SMSClient()
 
         {
             try
@@ -37,23 +37,17 @@ namespace SMSModule
            
         }
 
-        public bool SendMessage(string from, string to, string body)
+      public string SendMessage(string from, string to, string body)
         {
-            bool returnValue = true ;
-            try
+          try
             {
                 var messageResponse =  MessageResource.Create(
                    to: new PhoneNumber(FormatPhoneNumber(to)),
                    from: new PhoneNumber(FormatPhoneNumber(from)),
                    body: body,
                    client: _client);
-
-                if  (messageResponse.Sid == "")
-                {
-                    returnValue = false;
-                }
-
-                return returnValue;
+                 
+                return messageResponse.Sid ;
             }
             catch (ApiException ex)
             {
@@ -61,84 +55,34 @@ namespace SMSModule
             }
          }
 
-        //public async Task SendMessage(string from, string to, string body)
-        //  {
-        //    try
-        //      {
-        //       messageResponse = await MessageResource.CreateAsync(
-        //          to: new PhoneNumber(FormatPhoneNumber(to)),
-        //          from: new PhoneNumber(FormatPhoneNumber(from)),
-        //          body: body,
-        //          client: _client);
-
-        //      await Task.FromResult(true);
-        //      }
-        //      catch (ApiException ex)
-        //      {
-        //          throw ex;
-        //      }
-        //      finally
-        //      {
-        //          await Task.FromResult(true);
-        //      }
-
-        //  }
-
-        public string getResponseProperty(ResponsePropertyId iResponsePropertyId)
+        public string[] getMessages(string From, string To)
         {
-            var responseString = "";
 
-            switch (iResponsePropertyId)
-            {
-                case ResponsePropertyId.MessageId:
-                    responseString = messageResponse.Sid;
-                    break;
-
-                case ResponsePropertyId.PhoneNumber:
-                    responseString = messageResponse.To;
-                    break;
-
-                case ResponsePropertyId.MessageText:
-                    responseString = messageResponse.Body;
-                    break;
-
-                case ResponsePropertyId.DeliveryStatus:
-                    responseString = messageResponse.Status.ToString();
-                    break;
-
-                case ResponsePropertyId.SendingStatus:
-                    responseString =messageResponse.Status.ToString(); ;
-                    break;
-
-                case ResponsePropertyId.SentDate:
-                    responseString = messageResponse.DateCreated.ToString();
-                    break;
-
-               case ResponsePropertyId.DeliveryDate:
-                    responseString = messageResponse.DateSent.ToString();
-                    break;
-
-               default:
-                    responseString = "";
-                    break;
-            }
-            return responseString;
-        }
-
-        public  string FetchMessages(long dateSent, string from, string to)
-        {
             var messageHistory = MessageResource.Read(
-               dateSent: new DateTime(dateSent),
-               from: new PhoneNumber(FormatPhoneNumber(from)),
-               to: new PhoneNumber(FormatPhoneNumber(to))
+               //dateSent: new DateTime(DateSent),
+               from: new PhoneNumber(FormatPhoneNumber(From)),
+               to: new PhoneNumber(FormatPhoneNumber(To)),
+               client: _client
                );
+            int i = 0;
 
             foreach (var record in messageHistory)
             {
+              i = i++;
+              messageList = new string[] { record.Sid,record.DateSent.ToString()
+                                           ,record.DateUpdated.ToString()
+                                           ,record.To
+                                           ,record.Status.ToString()
+                                           ,record.Status.ToString()
+                                           ,record.Body
+                                         };
 
+                messageList[i] = record.ToString(); 
+               
             }
-            return messageHistory.ToString();
+         return messageList;
         }
+
 
         public static string FormatPhoneNumber(string unformattedNumber)
         {
