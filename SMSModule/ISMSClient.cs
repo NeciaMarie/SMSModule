@@ -12,9 +12,9 @@ namespace SMSModule
 {
     interface ISMSClient
     {
-      string SendMessage(string from, string to, string body);
-      string[] getMessages(string from, string to);
-     // string getMessages(string from, string to);
+      string[] SendMessage(string from, string to, string body);
+      string[] GetMessageStatus(string MessageID);
+     
        
     }
 }

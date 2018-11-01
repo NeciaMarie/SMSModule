@@ -1,12 +1,9 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using Twilio.Clients;
-using Twilio.Rest.Api.V2010;
+using Twilio.Exceptions;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
-using Twilio.Exceptions;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace SMSModule
 {
@@ -15,7 +12,7 @@ namespace SMSModule
     {
         public ITwilioRestClient _client;
         public MessageResource messageResponse;
-        string[] messageList;
+        private string[] messageList;
 
         public SMSClient()
 
@@ -31,71 +28,81 @@ namespace SMSModule
             }
         }
 
-      public  SMSClient(ITwilioRestClient client)
+        public SMSClient(ITwilioRestClient client)
         {
             _client = client;
-           
+
         }
 
-      public string SendMessage(string from, string to, string body)
+        public string[] SendMessage(string from, string to, string body)
         {
-          try
+            try
             {
-                var messageResponse =  MessageResource.Create(
+                var messageResponse = MessageResource.Create(
                    to: new PhoneNumber(FormatPhoneNumber(to)),
                    from: new PhoneNumber(FormatPhoneNumber(from)),
                    body: body,
                    client: _client);
-                 
-                return messageResponse.Sid ;
+
+                messageList = new string[] { messageResponse.Sid
+                                               ,messageResponse.DateCreated.ToString()
+                                               ,messageResponse.To
+                                               ,messageResponse.Body
+                                               ,messageResponse.Status.ToString()
+                                         };
+
+                return messageList;
+
             }
             catch (ApiException ex)
             {
                 throw ex;
             }
-         }
-
-        public string[] getMessages(string From, string To)
-        {
-
-            var messageHistory = MessageResource.Read(
-               //dateSent: new DateTime(DateSent),
-               from: new PhoneNumber(FormatPhoneNumber(From)),
-               to: new PhoneNumber(FormatPhoneNumber(To)),
-               client: _client
-               );
-            int i = 0;
-
-            foreach (var record in messageHistory)
-            {
-              i = i++;
-              messageList = new string[] { record.Sid,record.DateSent.ToString()
-                                           ,record.DateUpdated.ToString()
-                                           ,record.To
-                                           ,record.Status.ToString()
-                                           ,record.Status.ToString()
-                                           ,record.Body
-                                         };
-
-                messageList[i] = record.ToString(); 
-               
-            }
-         return messageList;
         }
 
+
+        public string[] GetMessageStatus(string MessageID)
+        {
+            try
+            {
+                var messageHistory = MessageResource.Fetch(
+                   pathSid: MessageID,
+                   client: _client
+                );
+
+                messageList = new string[] {messageHistory.DateUpdated.ToString()
+                                                ,messageHistory.Status.ToString()
+                                          };
+
+
+                return messageList;
+            }
+
+            catch (ApiException ex)
+            {
+                throw ex;
+            }
+
+        }
 
         public static string FormatPhoneNumber(string unformattedNumber)
         {
             if (String.IsNullOrWhiteSpace(unformattedNumber))
+            {
                 throw new ArgumentNullException("unformattedNumber");
+            }
 
             var formattedNumber = Regex.Replace(unformattedNumber, "[^0-9\\.]", String.Empty);
 
             if (formattedNumber.Length < 10)
+            {
                 throw new ArgumentException("unformattedNumber must at least be a 10 digit phone number");
+            }
 
             if (formattedNumber.Length == 10)
+            {
                 formattedNumber = String.Concat("1", formattedNumber);
+            }
 
             return String.Concat("+", formattedNumber);
         }
