@@ -5,6 +5,7 @@ using Twilio.Exceptions;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
 
+
 namespace SMSModule
 {
     public class SMSClient : ISMSClient
@@ -12,7 +13,9 @@ namespace SMSModule
     {
         public ITwilioRestClient _client;
         public MessageResource messageResponse;
-        private string[] messageList;
+        private string[] outgoingMessageList;
+        private string[] incomingMessageList;
+        private string[] accountProperties;
 
         public SMSClient()
 
@@ -34,6 +37,27 @@ namespace SMSModule
 
         }
 
+        public string[] GetAccountInfo(string clinicID)
+        {
+            try
+            {
+                var account = Twilio.Rest.Api.V2010.AccountResource.Read(friendlyName: clinicID.Trim()
+                                                                         , client: _client);
+                accountProperties = new string[]
+                {
+
+                };
+
+                return accountProperties;
+            }
+
+            catch (ApiException ex)
+            {
+                throw ex;
+            }
+
+        }
+
         public string[] SendMessage(string from, string to, string body)
         {
             try
@@ -44,14 +68,14 @@ namespace SMSModule
                    body: body,
                    client: _client);
 
-                messageList = new string[] { messageResponse.Sid
+                outgoingMessageList = new string[] { messageResponse.Sid
                                                ,messageResponse.DateCreated.ToString()
                                                ,messageResponse.To
                                                ,messageResponse.Body
                                                ,messageResponse.Status.ToString()
                                          };
 
-                return messageList;
+                return outgoingMessageList;
 
             }
             catch (ApiException ex)
@@ -59,7 +83,6 @@ namespace SMSModule
                 throw ex;
             }
         }
-
 
         public string[] GetMessageStatus(string MessageID)
         {
@@ -70,20 +93,53 @@ namespace SMSModule
                    client: _client
                 );
 
-                messageList = new string[] {messageHistory.DateUpdated.ToString()
+                outgoingMessageList = new string[] {messageHistory.DateUpdated.ToString()
                                                 ,messageHistory.Status.ToString()
                                           };
 
-
-                return messageList;
+                return outgoingMessageList;
             }
 
             catch (ApiException ex)
             {
                 throw ex;
             }
-
         }
+
+
+        public string[] IncomingMessage(string to)
+        {
+            try
+
+             {
+                DateTime dateReceived = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day,0,0,0);
+                var messages = MessageResource.Read(
+                               dateSent: dateReceived,
+                               to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
+                foreach (var record in messages)
+                {
+                    incomingMessageList = new string[] {record.Sid
+                                                        ,record.DateCreated.ToString()
+                                                        ,record.From.ToString()
+                                                        ,record.Body
+                                                        ,record.Status.ToString()};
+                                                                 
+                }
+
+                return incomingMessageList;
+            }
+            catch (ApiException ex)
+            {
+                throw ex;
+            }
+        }
+
+        public static string FormatDatetime(string unformatteddatetime)
+        {
+
+            return unformatteddatetime;
+        }
+
 
         public static string FormatPhoneNumber(string unformattedNumber)
         {

@@ -14,7 +14,7 @@ namespace SMSModule
     {
       string[] SendMessage(string from, string to, string body);
       string[] GetMessageStatus(string MessageID);
-     
-       
+      string[] GetAccountInfo(string ClinicID);
+      string[] IncomingMessage(string to);
     }
 }
