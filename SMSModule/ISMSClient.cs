@@ -12,9 +12,11 @@ namespace SMSModule
 {
     interface ISMSClient
     {
-      string[] SendMessage(string from, string to, string body);
-      string[] GetMessageStatus(string MessageID);
+      string[] SendMessage(string from, string to, string body,string subaccountsid);
+      string[] GetMessageStatus(string MessageID,string subaccountsid);
       string[] GetAccountInfo(string ClinicID);
-      string[] IncomingMessage(string to);
+      List<IncomingMessage> IncomingMessages(string subaccountsid, string to);
     }
 }
+
+

@@ -59,6 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IncomingMessage.cs" />
     <Compile Include="ISMSClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Credentials.cs" />

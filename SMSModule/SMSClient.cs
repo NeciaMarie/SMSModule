@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Twilio.Clients;
 using Twilio.Exceptions;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
-
 
 namespace SMSModule
 {
@@ -14,8 +14,8 @@ namespace SMSModule
         public ITwilioRestClient _client;
         public MessageResource messageResponse;
         private string[] outgoingMessageList;
-        private string[] incomingMessageList;
         private string[] accountProperties;
+        private List<IncomingMessage> incomingMessageList;
 
         public SMSClient()
 
@@ -31,11 +31,13 @@ namespace SMSModule
             }
         }
 
+
         public SMSClient(ITwilioRestClient client)
         {
             _client = client;
 
         }
+
 
         public string[] GetAccountInfo(string clinicID)
         {
@@ -58,12 +60,13 @@ namespace SMSModule
 
         }
 
-        public string[] SendMessage(string from, string to, string body)
+        public string[] SendMessage(string from, string to, string body, string subaccountsid)
         {
             try
             {
                 var messageResponse = MessageResource.Create(
                    to: new PhoneNumber(FormatPhoneNumber(to)),
+                   pathAccountSid: subaccountsid,
                    from: new PhoneNumber(FormatPhoneNumber(from)),
                    body: body,
                    client: _client);
@@ -84,12 +87,13 @@ namespace SMSModule
             }
         }
 
-        public string[] GetMessageStatus(string MessageID)
+        public string[] GetMessageStatus(string MessageID, string subaccountsid)
         {
             try
             {
                 var messageHistory = MessageResource.Fetch(
                    pathSid: MessageID,
+                   pathAccountSid: subaccountsid,
                    client: _client
                 );
 
@@ -106,24 +110,29 @@ namespace SMSModule
             }
         }
 
-
-        public string[] IncomingMessage(string to)
+        public List<IncomingMessage> IncomingMessages(string subaccountsid, string to)
         {
             try
 
-             {
-                DateTime dateReceived = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day,0,0,0);
+            {
+                DateTime dateReceived = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 0, 0, 0);
                 var messages = MessageResource.Read(
+                               pathAccountSid: subaccountsid,
                                dateSent: dateReceived,
                                to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
+                incomingMessageList = new List<IncomingMessage>();
                 foreach (var record in messages)
                 {
-                    incomingMessageList = new string[] {record.Sid
-                                                        ,record.DateCreated.ToString()
-                                                        ,record.From.ToString()
-                                                        ,record.Body
-                                                        ,record.Status.ToString()};
-                                                                 
+                    IncomingMessage r = new IncomingMessage()
+                    {
+                        Sid = record.Sid,
+                        DateCreated = record.DateCreated.ToString(),
+                        From = record.From.ToString(),
+                        Body = record.Body,
+                        Status = record.Status.ToString()
+                    };
+
+                    incomingMessageList.Add(r);
                 }
 
                 return incomingMessageList;
@@ -133,7 +142,6 @@ namespace SMSModule
                 throw ex;
             }
         }
-
         public static string FormatDatetime(string unformatteddatetime)
         {
 
@@ -162,5 +170,8 @@ namespace SMSModule
 
             return String.Concat("+", formattedNumber);
         }
+
     }
+
+
 }
