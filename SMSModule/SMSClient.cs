@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Text.RegularExpressions;
 using Twilio.Clients;
 using Twilio.Exceptions;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
+using System.Linq;
 
 namespace SMSModule
 {
@@ -16,6 +18,7 @@ namespace SMSModule
         private string[] outgoingMessageList;
         private string[] accountProperties;
         private List<IncomingMessage> incomingMessageList;
+        
 
         public SMSClient()
 
@@ -110,7 +113,9 @@ namespace SMSModule
             }
         }
 
-        public List<IncomingMessage> IncomingMessages(string subaccountsid, string to)
+        // public List<IncomingMessage> IncomingMessages(string subaccountsid, string to)
+        // public ArrayList IncomingMessages(string subaccountsid, string to)
+        public Array IncomingMessages(string subaccountsid, string to)
         {
             try
 
@@ -121,6 +126,7 @@ namespace SMSModule
                                dateSent: dateReceived,
                                to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
                 incomingMessageList = new List<IncomingMessage>();
+                string[] ArrayincomingMessageList  = new string[100];
                 foreach (var record in messages)
                 {
                     IncomingMessage r = new IncomingMessage()
@@ -133,9 +139,10 @@ namespace SMSModule
                     };
 
                     incomingMessageList.Add(r);
+                    
                 }
-
-                return incomingMessageList;
+                //ArrayincomingMessageList = incomingMessageList.ToArray(incomingMessageList) ;
+                return ArrayincomingMessageList;
             }
             catch (ApiException ex)
             {

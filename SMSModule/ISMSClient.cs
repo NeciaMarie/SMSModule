@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,9 @@ namespace SMSModule
       string[] SendMessage(string from, string to, string body,string subaccountsid);
       string[] GetMessageStatus(string MessageID,string subaccountsid);
       string[] GetAccountInfo(string ClinicID);
-      List<IncomingMessage> IncomingMessages(string subaccountsid, string to);
+        //List<IncomingMessage> IncomingMessages(string subaccountsid, string to);
+        //ArrayList IncomingMessages(string subaccountsid, string to);
+        Array IncomingMessages(string subaccountsid, string to);
     }
 }
 
