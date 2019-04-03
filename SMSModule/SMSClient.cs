@@ -4,6 +4,7 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using Twilio.Clients;
 using Twilio.Exceptions;
+using Twilio.Rest.Api.V2010;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
 using System.Linq;
@@ -16,8 +17,7 @@ namespace SMSModule
         public ITwilioRestClient _client;
         public MessageResource messageResponse;
         private string[] outgoingMessageList;
-        private string[] accountProperties;
-        private List<IncomingMessage> incomingMessageList;
+        private string[] incomingmessage;
         
 
         public SMSClient()
@@ -28,38 +28,15 @@ namespace SMSModule
                 _client = new TwilioRestClient(Credentials.masterAccountSid, Credentials.masterAuthToken);
 
             }
-            catch (TwilioException ex)
+            catch (TwilioException)
             {
-                throw ex;
+                throw ;
             }
         }
-
-
+        
         public SMSClient(ITwilioRestClient client)
         {
             _client = client;
-
-        }
-
-
-        public string[] GetAccountInfo(string clinicID)
-        {
-            try
-            {
-                var account = Twilio.Rest.Api.V2010.AccountResource.Read(friendlyName: clinicID.Trim()
-                                                                         , client: _client);
-                accountProperties = new string[]
-                {
-
-                };
-
-                return accountProperties;
-            }
-
-            catch (ApiException ex)
-            {
-                throw ex;
-            }
 
         }
 
@@ -84,9 +61,9 @@ namespace SMSModule
                 return outgoingMessageList;
 
             }
-            catch (ApiException ex)
+            catch (ApiException)
             {
-                throw ex;
+                throw ;
             }
         }
 
@@ -107,56 +84,67 @@ namespace SMSModule
                 return outgoingMessageList;
             }
 
-            catch (ApiException ex)
+            catch (ApiException)
             {
-                throw ex;
+                throw ;
             }
         }
 
-        // public List<IncomingMessage> IncomingMessages(string subaccountsid, string to)
-        // public ArrayList IncomingMessages(string subaccountsid, string to)
-        public Array IncomingMessages(string subaccountsid, string to)
+
+        public int IncomingMessagesCount(string subaccountsid, string to, string date)
         {
             try
 
             {
-                DateTime dateReceived = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 0, 0, 0);
+                DateTime dateReceived = new DateTime(DateTime.Parse(date).Year, DateTime.Parse(date).Month, DateTime.Parse(date).Day
+                                                    , DateTime.Parse(date).Hour, DateTime.Parse(date).Minute, DateTime.Parse(date).Second);
                 var messages = MessageResource.Read(
                                pathAccountSid: subaccountsid,
                                dateSent: dateReceived,
                                to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
-                incomingMessageList = new List<IncomingMessage>();
-                string[] ArrayincomingMessageList  = new string[100];
+                int MessageCount = 0;
                 foreach (var record in messages)
                 {
-                    IncomingMessage r = new IncomingMessage()
-                    {
-                        Sid = record.Sid,
-                        DateCreated = record.DateCreated.ToString(),
-                        From = record.From.ToString(),
-                        Body = record.Body,
-                        Status = record.Status.ToString()
-                    };
-
-                    incomingMessageList.Add(r);
-                    
+                     MessageCount++;
                 }
-                //ArrayincomingMessageList = incomingMessageList.ToArray(incomingMessageList) ;
-                return ArrayincomingMessageList;
+               
+                return MessageCount;
             }
-            catch (ApiException ex)
+            catch (ApiException)
             {
-                throw ex;
+                throw ;
             }
         }
-        public static string FormatDatetime(string unformatteddatetime)
-        {
 
-            return unformatteddatetime;
+       public string[] IncomingMessages(string subaccountsid, string to, string date)
+        {
+            try
+
+            {
+                DateTime dateReceived = new DateTime(DateTime.Parse(date).Year, DateTime.Parse(date).Month, DateTime.Parse(date).Day
+                                                     , DateTime.Parse(date).Hour, DateTime.Parse(date).Minute, DateTime.Parse(date).Second);
+                var messages = MessageResource.Read(
+                               pathAccountSid: subaccountsid,
+                               dateSent: dateReceived,
+                               to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
+                foreach (var record in messages)
+                {
+                    incomingmessage = new string[] {record.Sid
+                                                        ,record.DateCreated.ToString()
+                                                        ,record.From.ToString()
+                                                        ,record.Body
+                                                        ,record.Status.ToString()};
+                }
+
+                return incomingmessage;
+            }
+            catch (ApiException )
+            {
+                throw ;
+            }
         }
 
-
-        public static string FormatPhoneNumber(string unformattedNumber)
+       public static string FormatPhoneNumber(string unformattedNumber)
         {
             if (String.IsNullOrWhiteSpace(unformattedNumber))
             {
@@ -179,6 +167,5 @@ namespace SMSModule
         }
 
     }
-
 
 }

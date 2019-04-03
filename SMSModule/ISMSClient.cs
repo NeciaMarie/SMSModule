@@ -15,10 +15,8 @@ namespace SMSModule
     {
       string[] SendMessage(string from, string to, string body,string subaccountsid);
       string[] GetMessageStatus(string MessageID,string subaccountsid);
-      string[] GetAccountInfo(string ClinicID);
-        //List<IncomingMessage> IncomingMessages(string subaccountsid, string to);
-        //ArrayList IncomingMessages(string subaccountsid, string to);
-        Array IncomingMessages(string subaccountsid, string to);
+      int IncomingMessagesCount(string subaccountsid, string to,string date);
+      string[] IncomingMessages(string subaccountsid, string to,string date);
     }
 }
 
