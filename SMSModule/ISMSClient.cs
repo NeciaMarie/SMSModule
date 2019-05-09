@@ -16,8 +16,8 @@ namespace SMSModule
       string[] SendMessage(string from, string to, string body,string subaccountsid);
       string[] GetMessageStatus(string MessageID,string subaccountsid);
       int IncomingMessagesCount(string subaccountsid, string to,string date);
-      string[] IncomingMessages(string subaccountsid, string to,string date);
-    }
+      object IncomingMessages(string subaccountsid, string to,string date);
+   }
 }
 
 

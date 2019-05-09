@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.Text.RegularExpressions;
 using Twilio.Clients;
 using Twilio.Exceptions;
-using Twilio.Rest.Api.V2010;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
-using System.Linq;
+using Newtonsoft.Json;
+using Twilio.Rest.Api.V2010.Account.Usage;
 
 namespace SMSModule
 {
@@ -17,8 +16,8 @@ namespace SMSModule
         public ITwilioRestClient _client;
         public MessageResource messageResponse;
         private string[] outgoingMessageList;
-        private string[] incomingmessage;
-        
+        public List<IncomingMessage> incomingMessageList;
+        public List<Billing> BillingInfoList;
 
         public SMSClient()
 
@@ -90,7 +89,6 @@ namespace SMSModule
             }
         }
 
-
         public int IncomingMessagesCount(string subaccountsid, string to, string date)
         {
             try
@@ -116,35 +114,78 @@ namespace SMSModule
             }
         }
 
-       public string[] IncomingMessages(string subaccountsid, string to, string date)
+       public object IncomingMessages(string subaccountsid, string to, string date)
         {
             try
 
             {
-                DateTime dateReceived = new DateTime(DateTime.Parse(date).Year, DateTime.Parse(date).Month, DateTime.Parse(date).Day
-                                                     , DateTime.Parse(date).Hour, DateTime.Parse(date).Minute, DateTime.Parse(date).Second);
-                var messages = MessageResource.Read(
+                  var messages = MessageResource.Read(
                                pathAccountSid: subaccountsid,
-                               dateSent: dateReceived,
+                               dateSent: DateTimeParser(date),
                                to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
+                incomingMessageList = new List<IncomingMessage>();
                 foreach (var record in messages)
                 {
-                    incomingmessage = new string[] {record.Sid
-                                                        ,record.DateCreated.ToString()
-                                                        ,record.From.ToString()
-                                                        ,record.Body
-                                                        ,record.Status.ToString()};
-                }
+                    IncomingMessage r = new IncomingMessage()
+                    {
+                        Sid = record.Sid,
+                        DateCreated = record.DateCreated.ToString(),
+                        From = record.From.ToString(),
+                        Body = record.Body,
+                        Status = record.Status.ToString()
+                    };
 
-                return incomingmessage;
+                    incomingMessageList.Add(r);
+                }
+               object JsonincomingMessageList = JsonConvert.SerializeObject(incomingMessageList);
+
+                return JsonincomingMessageList;
+
             }
-            catch (ApiException )
+            catch (ApiException)
             {
-                throw ;
+                throw;
             }
         }
 
-       public static string FormatPhoneNumber(string unformattedNumber)
+        public object GetBillingInfo(string subaccountsid,string datefrom, string dateto)
+        {
+            try
+            {
+           var billinginfo = RecordResource.Read(
+                                  pathAccountSid:subaccountsid,
+                                  category: RecordResource.CategoryEnum.SmsOutbound,
+                                  startDate: DateTimeParser(datefrom),
+                                  endDate: DateTimeParser(dateto),
+                                  includeSubaccounts:true,
+                                  client: _client);
+                BillingInfoList = new List<Billing>();
+
+                foreach (RecordResource record in billinginfo)
+                {
+                    Billing r = new Billing()
+                    {
+                        Sid = record.AccountSid,
+                        Count = record.Count,
+                        CountUnit = record.CountUnit,
+                        Price = record.Price.ToString(),
+                        Description = record.Description,
+                        Usage = record.Usage
+                    };
+
+                    BillingInfoList.Add(r);
+                }
+                object JsonBillingInfoList = JsonConvert.SerializeObject(BillingInfoList);
+
+                return JsonBillingInfoList;
+            }
+            catch(ApiException)
+            {
+                throw;
+            }
+        }
+
+        public static string FormatPhoneNumber(string unformattedNumber)
         {
             if (String.IsNullOrWhiteSpace(unformattedNumber))
             {
@@ -166,6 +207,18 @@ namespace SMSModule
             return String.Concat("+", formattedNumber);
         }
 
+
+        public static DateTime DateTimeParser(string date)
+        {
+            DateTime dateReceived = new DateTime(DateTime.Parse(date).Year, DateTime.Parse(date).Month, DateTime.Parse(date).Day
+                                                   , DateTime.Parse(date).Hour, DateTime.Parse(date).Minute, DateTime.Parse(date).Second);
+
+            var ParsedDate = DateTime.Parse(date);
+
+            return ParsedDate;
+        }
+
     }
+
 
 }
