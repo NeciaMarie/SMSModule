@@ -8,6 +8,7 @@ using Twilio.Types;
 using Newtonsoft.Json;
 using Twilio.Rest.Api.V2010.Account.Usage;
 
+
 namespace SMSModule
 {
     public class SMSClient : ISMSClient
@@ -51,7 +52,7 @@ namespace SMSModule
                    client: _client);
 
                 outgoingMessageList = new string[] { messageResponse.Sid
-                                               ,messageResponse.DateCreated.ToString()
+                                               ,messageResponse.DateCreated.Value.ToString("MM/dd/yyyy HH:mm:ss")
                                                ,messageResponse.To
                                                ,messageResponse.Body
                                                ,messageResponse.Status.ToString()
@@ -76,7 +77,7 @@ namespace SMSModule
                    client: _client
                 );
 
-                outgoingMessageList = new string[] {messageHistory.DateUpdated.ToString()
+                outgoingMessageList = new string[] {messageHistory.DateUpdated.Value.ToString("MM/dd/yyyy HH:mm:ss")
                                                 ,messageHistory.Status.ToString()
                                           };
 
@@ -94,11 +95,10 @@ namespace SMSModule
             try
 
             {
-                DateTime dateReceived = new DateTime(DateTime.Parse(date).Year, DateTime.Parse(date).Month, DateTime.Parse(date).Day
-                                                    , DateTime.Parse(date).Hour, DateTime.Parse(date).Minute, DateTime.Parse(date).Second);
+               
                 var messages = MessageResource.Read(
                                pathAccountSid: subaccountsid,
-                               dateSent: dateReceived,
+                               dateSent: DateTimeParser(date),
                                to: new PhoneNumber(FormatPhoneNumber(to)), client: _client);
                 int MessageCount = 0;
                 foreach (var record in messages)
@@ -211,7 +211,7 @@ namespace SMSModule
         public static DateTime DateTimeParser(string date)
         {
             DateTime dateReceived = new DateTime(DateTime.Parse(date).Year, DateTime.Parse(date).Month, DateTime.Parse(date).Day
-                                                   , DateTime.Parse(date).Hour, DateTime.Parse(date).Minute, DateTime.Parse(date).Second);
+                                                   , 0, 0,0);
 
             var ParsedDate = DateTime.Parse(date);
 

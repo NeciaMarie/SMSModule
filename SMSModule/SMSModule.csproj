@@ -64,7 +64,6 @@
     <Compile Include="ISMSClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Credentials.cs" />
-    <Compile Include="SMSBilling.cs" />
     <Compile Include="SMSClient.cs" />
   </ItemGroup>
   <ItemGroup>
